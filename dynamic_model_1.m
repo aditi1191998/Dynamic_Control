@@ -1,0 +1,106 @@
+function out=dynamic_model_1(in)
+x=in(1);
+y=in(2);
+z=in(3);
+vel_x=in(4);
+vel_y=in(5);
+vel_z=in(6);
+roll_theta=in(7);
+pitch_theta=in(8);
+yaw_theta=in(9);
+roll_omega=in(10);
+pitch_omega=in(11);
+yaw_omega=in(12);
+omega_1=in(13);
+omega_2=in(14);
+omega_3=in(15);
+omega_4=in(16);
+T1=in(17);
+T2=in(18);
+T3=in(19);
+T4=in(20);
+Q1=in(21);
+Q2=in(22);
+Q3=in(23);
+Q4=in(24);
+HX1=in(25);
+HX2=in(26);
+HX3=in(27);
+HX4=in(28);
+HY1=in(29);
+HY2=in(30);
+HY3=in(31);
+HY4=in(32);
+RX1=in(33);
+RX2=in(34);
+RX3=in(35);
+RX4=in(36);
+RY1=in(37);
+RY2=in(38);
+RY3=in(39);
+RY4=in(40);
+
+%PARAMETERS
+b=3.13*exp(-5);
+d=7.5*exp(-7);
+l=0.23;
+m=0.65;     
+Ixx=7.5*exp(-3);
+Iyy=7.5*exp(-3);
+Izz=1.3*exp(-2);
+Jr=6*exp(-5);
+g= 9.81;
+h=0.05;
+rho=1.205;
+c=0.04;
+pi=3.14;
+r=0.15;
+A=pi*r*r;
+Ac=0.005; %637034??doubt
+theta_pitch=0.2618;
+theta_twist_pitch=0.045; 
+a=5.7;
+Cd=0.052; 
+
+%CALCULATED CONSTANTS
+w=(m/4)*g;
+vel=(vel_x)^2+(vel_y)^2;
+v1=sqrt(-0.5*vel^2+sqrt((0.5*vel^2)^2+(w/(2*rho*A))^2));
+OmegaH=sqrt(w/b);
+mu=vel/(OmegaH*r);
+mu_x=vel_x/(OmegaH*r);
+mu_y=vel_x/(OmegaH*r);
+solidity_ratio=c*2/(2*pi*r);
+lambda=(v1+vel_z)/(OmegaH*r);
+
+Ct=solidity_ratio*a*(((1/6)+(mu^2)/4)*theta_pitch-((1+mu^2)*theta_twist_pitch/8)-(lambda/4));
+Chx=solidity_ratio*a*((mu_x*Cd/(4*a))+(0.25*lambda*mu_x*(theta_pitch-0.5*theta_twist_pitch)));
+Chy=solidity_ratio*a*((mu_y*Cd/(4*a))+(0.25*lambda*mu_y*(theta_pitch-0.5*theta_twist_pitch)));
+Crx= - solidity_ratio*a*(mu_x*((theta_pitch/6)-(theta_twist_pitch/8)-(lambda/8)));
+Cry= - solidity_ratio*a*(mu_y*((theta_pitch/6)-(theta_twist_pitch/8)-(lambda/8)));
+omega_r=omega_1+omega_3-omega_2-omega_4;
+
+
+omega_r=omega_1+omega_3-omega_2-omega_4;
+hub_force_y_total=HY1+HY2+HY3+HY4;
+hub_force_x_total=HX1+HX2+HX3+HX4;
+
+ang_acc_x = (((pitch_omega)*(yaw_omega)*(Iyy-Izz)+(Jr)*(pitch_omega)*(omega_r)-l*(T4-T2)-h*(hub_force_y_total)+RX1-RX2+RX3-RX4)/(Ixx));
+ang_acc_y = ((roll_omega)*(yaw_omega)*(Izz-Ixx)-(Jr)*(roll_omega)*(omega_r)-l*(T1-T3)+h*(hub_force_x_total)+RY1-RY2+RY3-RY4)/(Iyy);
+ang_acc_z = ((pitch_omega)*(roll_omega)*(Iyy-Izz)+(Jr)*(omega_r)-Q1+Q2-Q3+Q4-l*(HX2-HX4)+l*(-(HY1)+(HY3)))/(Izz);
+acc_z = -(g-(cos(yaw_theta)*cos(roll_theta)*(T1+T2+T3+T4))/(m));
+acc_y = ((sin(yaw_theta)*sin(roll_theta)+cos(yaw_theta)*sin(pitch_theta)*cos(roll_theta))*(T1+T2+T3+T4)-(hub_force_x_total)-0.5*Chx*Ac*rho*(vel_x)*abs(vel_x))/(m);
+acc_x = ((-cos(yaw_theta)*sin(roll_theta)+sin(yaw_theta)*sin(pitch_theta)*cos(roll_theta))*(T1+T2+T3+T4)-(hub_force_y_total)-0.5*Chy*Ac*rho*(vel_y)*abs(vel_y))/(m);
+
+out(1)=vel_x;
+out(2)=vel_y;
+out(3)=vel_z;
+out(4)=acc_x;
+out(5)=acc_y;
+out(6)=acc_z;
+out(7)=roll_omega;
+out(8)=pitch_omega;
+out(9)=yaw_omega;
+out(10)=ang_acc_x;
+out(11)=ang_acc_y;
+out(12)=ang_acc_z;
